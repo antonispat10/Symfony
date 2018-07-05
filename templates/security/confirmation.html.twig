@@ -1,0 +1,13 @@
+{%  extends 'base.html.twig' %}
+
+{%  block body %}
+
+    {% if user %}
+        <h5>Congrats</h5>
+        <p>Your account is confirmed! You can now sign in</p>
+        <a href="{{ url('security_login') }}"></a>
+        {% else %}
+            Something went wrong. Please check your email.
+                {% endif %}
+
+{% endif %}
