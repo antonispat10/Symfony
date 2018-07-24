@@ -66,7 +66,7 @@ class MicroPost
      *     inverseJoinColumns={@ORM\JoinColumn(name="user_id", referencedColumnName="id")}
      *     )
      */
-    private $likedby;
+    private $likedBy;
 
 
 
@@ -80,15 +80,15 @@ class MicroPost
      */
     public function getLikedby()
     {
-        return $this->likedby;
+        return $this->likedBy;
     }
 
     /**
-     * @param mixed $likedby
+     * @param mixed $likedBy
      */
-    public function setLikedby($likedby): void
+    public function setLikedBy($likedBy): void
     {
-        $this->likedby = $likedby;
+        $this->likedby = $likedBy;
     }
 
 

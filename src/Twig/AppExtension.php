@@ -9,6 +9,8 @@
 namespace App\Twig;
 
 
+use App\Entity\MicroPost;
+use App\Repository\MicroPostRepository;
 use Twig\Extension\AbstractExtension;
 use Twig\Extension\GlobalsInterface;
 use Twig\TwigFilter;
@@ -16,9 +18,10 @@ use Twig\TwigFilter;
 class AppExtension extends AbstractExtension implements GlobalsInterface
 {
     private $locale;
-    public function __construct(string $locale)
+    public function __construct(string $locale,MicroPostRepository $microPostRepository)
     {
         $this->locale = $locale;
+        $this->microPostRepository = $microPostRepository;
     }
 
     public function getFilters()
@@ -29,10 +32,19 @@ class AppExtension extends AbstractExtension implements GlobalsInterface
     }
 
     public function getGlobals()
-    {
-        return [
+    {        $all_posts =  $this->microPostRepository->findAll();
+
+        return array(
+            'all_posts' => $all_posts,
+            'session'   => $_SESSION,
             'locale' => $this->locale
-        ];
+        );
+    }
+
+    public function getAllPosts()
+    {
+
+
     }
 
     public function priceFilter($number)

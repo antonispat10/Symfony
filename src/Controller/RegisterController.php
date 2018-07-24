@@ -16,6 +16,7 @@ use App\Security\TokenGenerator;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
@@ -54,9 +55,16 @@ class RegisterController extends Controller
                 UserRegisterEvent::NAME,
                 $userRegisterEvent
             );
-
             $this->redirect('micro_post_index');
+
+
+            $session = new Session();
+            $session->getFlashBag()->add('register', 'New User Created');
+            return $this->redirect($request->getUri());
+
         }
+
+
 
         return $this->render('register/register.html.twig',[
             'form' =>$form->createView()

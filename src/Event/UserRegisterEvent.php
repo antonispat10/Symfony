@@ -29,7 +29,7 @@ class UserRegisterEvent extends Event
     /**
      * @return User
      */
-    public function getRegisteredUser(): User
+    public function getRegisteredUser()
     {
         return $this->registeredUser;
     }
