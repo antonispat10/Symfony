@@ -10,7 +10,9 @@ namespace App\Twig;
 
 
 use App\Entity\MicroPost;
+use App\Entity\User;
 use App\Repository\MicroPostRepository;
+use App\Security\RedisStorage;
 use Twig\Extension\AbstractExtension;
 use Twig\Extension\GlobalsInterface;
 use Twig\TwigFilter;
@@ -18,10 +20,16 @@ use Twig\TwigFilter;
 class AppExtension extends AbstractExtension implements GlobalsInterface
 {
     private $locale;
-    public function __construct(string $locale,MicroPostRepository $microPostRepository)
+    /**
+     * @var RedisStorage
+     */
+    private $redisStorage;
+
+    public function __construct(string $locale,MicroPostRepository $microPostRepository,RedisStorage $redisStorage)
     {
         $this->locale = $locale;
         $this->microPostRepository = $microPostRepository;
+        $this->redisStorage = $redisStorage;
     }
 
     public function getFilters()
@@ -36,7 +44,6 @@ class AppExtension extends AbstractExtension implements GlobalsInterface
 
         return array(
             'all_posts' => $all_posts,
-            'session'   => $_SESSION,
             'locale' => $this->locale
         );
     }
@@ -51,6 +58,21 @@ class AppExtension extends AbstractExtension implements GlobalsInterface
     {
         return '$'.number_format($number,2,'.',',');
     }
+
+
+    public function getFunctions()
+    {
+        return array(
+            new \Twig_SimpleFunction('isFollower', [$this,'isFollower'])
+        );
+    }
+
+    public function isFollower(User $currentUser, User $isfollowing)
+    {
+
+      return $this->redisStorage->isFollower($currentUser,$isfollowing);
+    }
+
 
 
 

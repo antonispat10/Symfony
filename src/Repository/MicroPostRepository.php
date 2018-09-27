@@ -20,7 +20,7 @@ class MicroPostRepository extends ServiceEntityRepository
         parent::__construct($registry, MicroPost::class);
     }
 
-    public function findAllByUsers(Collection $users)
+    public function findAllByUsers( $users)
     {
         $qb = $this->createQueryBuilder('p');
 

@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Security\RedisStorage;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -25,20 +26,23 @@ class User implements UserInterface , \Serializable
      * @ORM\Column(type="integer")
      */
     private $id;
+    /**
+     * @var RedisStorage
+     */
+    private $redisStorage;
 
     /**
      * User constructor.
      * @param $posts
      */
-    public function __construct()
+    public function __construct(RedisStorage $redisStorage)
     {
         $this->posts = new ArrayCollection();
-        $this->followers = new ArrayCollection();
-        $this->following = new ArrayCollection();
         $this->postsLiked = new ArrayCollection();
         $this->roles = [self::ROLE_USER];
         $this->enabled = false;
 
+        $this->redisStorage = $redisStorage;
     }
 
     /**
@@ -69,7 +73,7 @@ class User implements UserInterface , \Serializable
 
     /**
      * @Assert\NotBlank()
-     * @Assert\Length(min=8, max=50)
+     * @Assert\Length(min=8, max=4096)
      */
     private $plainPassword;
 
@@ -110,25 +114,6 @@ class User implements UserInterface , \Serializable
      */
     private $posts;
 
-
-
-    /**
-     * @ORM\ManyToMany(targetEntity="App\Entity\User",mappedBy="following")
-     */
-    private $followers;
-
-    /**
-     * @ORM\ManyToMany(targetEntity="App\Entity\User",inversedBy="followers")
-     * @ORM\JoinTable(name="following", joinColumns= {
-     *     @ORM\JoinColumn(name="user_id",referencedColumnName="id")
-     * },
-     * inverseJoinColumns={
-     * @ORM\JoinColumn(name="following_user_id", referencedColumnName="id")
-     * }
-     * )
-     *
-     */
-    private $following;
 
     /**
      * @ORM\Column(type="string", nullable=true,length=30)
@@ -273,30 +258,6 @@ class User implements UserInterface , \Serializable
     public function getEmail()
     {
         return $this->email;
-    }
-
-    /**
-     * @return Collection
-     */
-    public function getFollowers()
-    {
-        return $this->followers;
-    }
-
-    /**
-     * @return Collection
-     */
-    public function getFollowing()
-    {
-        return $this->following;
-    }
-
-    public function follow(User $userToFollow)
-    {
-        if ($this->getFollowing()->contains($userToFollow)){
-            return;
-        }
-        $this->getFollowing()->add($userToFollow);
     }
 
     /**

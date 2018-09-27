@@ -58,6 +58,10 @@ class SecurityController
 
             $entityManager->flush();
         }
-        return new Response($this->twig->render('security/confirmation.html.twig'));
+        return new Response($this->twig->render('security/confirmation.html.twig',
+                [
+            'user' => $user
+                    ]
+        ));
     }
 }

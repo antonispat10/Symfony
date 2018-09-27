@@ -5,6 +5,9 @@ namespace App\Controller;
 
 use App\Entity\MicroPost;
 use App\Entity\User;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use App\Event\UserLocaleSubscriber;
 use App\Form\MicroPostType;
 use App\Repository\MicroPostRepository;
 use App\Repository\UserRepository;
@@ -20,6 +23,7 @@ use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
+use App\Security\RedisStorage;
 
 /**
  * @property  flashBag
@@ -36,9 +40,22 @@ class MicroPostController
      * @var FlashBagInterface
      */
     private $flashBag;
+    /**
+     * @var EventDispatcherInterface
+     */
+    private $eventDispatcher;
+    /**
+     * @var RedisStorage
+     */
+    private $redisStorage;
+    /**
+     * @var UserRepository
+     */
+    private $userRepository;
 
-    public function __construct(\Twig_Environment $twig, MicroPostRepository $microPostRepository, FormFactoryInterface $formFactory,
-                                EntityManagerInterface $entityManager,RouterInterface $router,FlashBagInterface $flashBag,AuthorizationCheckerInterface $authorizationChecker)
+    public function __construct(\Twig_Environment $twig, MicroPostRepository $microPostRepository,UserRepository $userRepository, FormFactoryInterface $formFactory,
+                                EntityManagerInterface $entityManager,RouterInterface $router,FlashBagInterface $flashBag,AuthorizationCheckerInterface $authorizationChecker
+    ,EventDispatcherInterface $eventDispatcher,RedisStorage $redisStorage)
 
     {
         $this->twig = $twig;
@@ -47,6 +64,9 @@ class MicroPostController
         $this->microPostRepository = $microPostRepository;
         $this->entityManager = $entityManager;
         $this->flashBag = $flashBag;
+        $this->eventDispatcher = $eventDispatcher;
+        $this->redisStorage = $redisStorage;
+        $this->userRepository = $userRepository;
     }
 
     /**
@@ -58,8 +78,14 @@ public function index(TokenStorageInterface $tokenStorage,UserRepository$userRep
 
     $usersToFollow = [];
 
+
+
     if ($currentUser instanceof User){
-        $posts = $this->microPostRepository->findAllByUsers($currentUser->getFollowing());
+
+        $followers_id = $this->redisStorage->followers($currentUser);
+        $followers = $this->userRepository->findBy(['id'=>$followers_id]);
+
+        $posts = $this->microPostRepository->findAllByUsers($followers);
         $usersToFollow = count($posts) === 0 ? $userRepository->findAllWithMoreThan5PostsExceptUser($currentUser) :[];
     } else {
         $posts = $this->microPostRepository->findBy(
@@ -87,6 +113,7 @@ public function edit(MicroPost $microPost,Request $request)
 //    if(!$this->authorizationChecker->isGranted('edit',$microPost)){
 //        throw new UnauthorizedHttpException();
 //    }
+
 
 
     $form = $this->formFactory->create(MicroPostType::class,$microPost);
@@ -154,13 +181,18 @@ public function add(Request $request,TokenStorageInterface $tokenStorage)
      */
     public function userPosts(User $userWithPosts)
     {
-        $html = $this->twig->render('micro-post/user-posts.html.twig',[
-//  'posts' => $this->microPostRepository->findBy(
-//                ['users' => $userWithPosts],
-//                ['time'=>'DESC']),
+        $userFollowers_id = $this->redisStorage->userFollowers($userWithPosts);
+        $userFollowing_id = $this->redisStorage->userFollowing($userWithPosts);
 
+
+        $userFollowers = $this->userRepository->findBy(['id' => $userFollowers_id]);
+        $userFollowing = $this->userRepository->findBy(['id' => $userFollowing_id]);
+
+        $html = $this->twig->render('micro-post/user-posts.html.twig',[
             'posts' => $userWithPosts->getPosts(),
             'user' => $userWithPosts,
+            'userFollowers' => $userFollowers,
+            'userFollowing' => $userFollowing
         ]);
 
         return new Response($html);

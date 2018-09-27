@@ -8,7 +8,7 @@
 
 namespace App\Tests\Security;
 
-use PhpUnit\Framework\TestCase;
+use PHPUnit\Framework\TestCase;
 use App\Security\TokenGenerator;
 
 class TokenGeneratorTest extends TestCase

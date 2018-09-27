@@ -23,3 +23,7 @@ yarn-error.log
 ###< symfony/phpunit-bridge ###
 
 /.idea/workspace.xml
+
+###> phpunit/phpunit ###
+/phpunit.xml
+###< phpunit/phpunit ###

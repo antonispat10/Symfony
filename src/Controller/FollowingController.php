@@ -8,6 +8,7 @@
 
 namespace App\Controller;
 use App\Entity\User;
+use App\Security\RedisStorage;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Component\Routing\Annotation\Route;
@@ -19,19 +20,32 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class FollowingController extends Controller
 {
+
+    private $redisStorage;
+
+    public function __construct(
+        RedisStorage $redisStorage
+    ) {
+        $this->redisStorage = $redisStorage;
+    }
+
     /**
      * @Route("/follow/{id}", name="following_follow")
      */
     public function follow(User $userToFollow)
     {
+
+
         /** @var User $currentUser */
         $currentUser = $this->getUser();
 
+
+
+
         if ($userToFollow->getId() !== $currentUser->getId()) {
 
-            $currentUser->follow($userToFollow);
+            $this->redisStorage->follow($currentUser, $userToFollow);
 
-            $this->getDoctrine()->getManager()->flush();
 
         }
 
@@ -52,9 +66,9 @@ class FollowingController extends Controller
         /** @var User $currentUser */
         $currentUser = $this->getUser();
 
-        $currentUser->getFollowing()->removeElement($userToUnfollow);
+        $this->redisStorage->unfollow($currentUser, $userToUnfollow);
 
-        $this->getDoctrine()->getManager()->flush();
+
 
         return $this->redirectToRoute(
             'micro_post_user',
